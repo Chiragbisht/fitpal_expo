@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Animated, Dimensions, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { saveUserData } from '@/utils/userData';
 import { LinearGradient } from 'expo-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { width, height } = Dimensions.get('window');
 
 interface FormData {
   name: string;
   gender: string;
-  birthday: string;
+  birthday: Date | null;
   height: string;
   weight: string;
   heightUnit: 'cm' | 'ft';
@@ -21,8 +22,8 @@ interface FormData {
 }
 
 const genderOptions = [
-  { id: 'male', label: 'male', icon: 'user' },
-  { id: 'female', label: 'female', icon: 'user' },
+  { id: 'male', label: 'Male', icon: 'user' },
+  { id: 'female', label: 'Female', icon: 'user' },
 ];
 
 const activityLevels = [
@@ -43,7 +44,7 @@ export default function OnboardingScreen() {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     gender: '',
-    birthday: '',
+    birthday: null,
     height: '',
     weight: '',
     heightUnit: 'cm',
@@ -53,6 +54,7 @@ export default function OnboardingScreen() {
   });
   const [currentStep, setCurrentStep] = useState(0);
   const [slideAnim] = useState(new Animated.Value(0));
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const router = useRouter();
 
   const steps = [
@@ -65,7 +67,7 @@ export default function OnboardingScreen() {
     { title: "Goal", subtitle: "What's your fitness goal?" },
   ];
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -124,7 +126,7 @@ export default function OnboardingScreen() {
       workoutLevel: formData.activityLevel,
       fitnessGoal: formData.fitnessGoal,
       gender: formData.gender,
-      birthday: formData.birthday,
+      birthday: formData.birthday?.toISOString() || '',
       heightUnit: formData.heightUnit,
       weightUnit: formData.weightUnit,
     };
@@ -137,13 +139,12 @@ export default function OnboardingScreen() {
     }
   };
 
-  const calculateAge = (birthday: string) => {
+  const calculateAge = (birthday: Date | null) => {
     if (!birthday) return '';
     const today = new Date();
-    const birthDate = new Date(birthday);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    let age = today.getFullYear() - birthday.getFullYear();
+    const monthDiff = today.getMonth() - birthday.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
       age--;
     }
     return age.toString();
@@ -153,12 +154,19 @@ export default function OnboardingScreen() {
     switch (currentStep) {
       case 0: return formData.name.trim() !== '';
       case 1: return formData.gender !== '';
-      case 2: return formData.birthday !== '';
+      case 2: return formData.birthday !== null;
       case 3: return formData.height.trim() !== '';
       case 4: return formData.weight.trim() !== '';
       case 5: return formData.activityLevel !== '';
       case 6: return formData.fitnessGoal !== '';
       default: return false;
+    }
+  };
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      handleInputChange('birthday', selectedDate);
     }
   };
 
@@ -172,7 +180,7 @@ export default function OnboardingScreen() {
               placeholder="Enter your name"
               value={formData.name}
               onChangeText={(value) => handleInputChange('name', value)}
-              placeholderTextColor="#666"
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
               autoFocus
             />
           </View>
@@ -193,8 +201,8 @@ export default function OnboardingScreen() {
                 >
                   <Feather 
                     name={option.icon as any} 
-                    size={24} 
-                    color={formData.gender === option.id ? '#4ADE80' : '#666'} 
+                    size={20} 
+                    color={formData.gender === option.id ? '#4ADE80' : 'rgba(255, 255, 255, 0.7)'} 
                   />
                   <Text style={[
                     styles.genderText,
@@ -211,16 +219,24 @@ export default function OnboardingScreen() {
       case 2:
         return (
           <View style={styles.stepContainer}>
-            <TouchableOpacity style={styles.birthdayInput}>
-              <Feather name="calendar" size={20} color="#4ADE80" style={styles.inputIcon} />
-              <TextInput
-                style={styles.birthdayText}
-                placeholder="Birthday"
-                value={formData.birthday}
-                onChangeText={(value) => handleInputChange('birthday', value)}
-                placeholderTextColor="#666"
-              />
+            <TouchableOpacity 
+              style={styles.birthdayInput}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Feather name="calendar" size={18} color="#4ADE80" style={styles.inputIcon} />
+              <Text style={styles.birthdayText}>
+                {formData.birthday ? formData.birthday.toLocaleDateString() : 'Select Birthday'}
+              </Text>
             </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={formData.birthday || new Date()}
+                mode="date"
+                display="default"
+                onChange={onDateChange}
+                maximumDate={new Date()}
+              />
+            )}
           </View>
         );
 
@@ -233,7 +249,7 @@ export default function OnboardingScreen() {
               value={formData.height}
               onChangeText={(value) => handleInputChange('height', value)}
               keyboardType="numeric"
-              placeholderTextColor="#666"
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
             />
             <View style={styles.unitSelector}>
               <TouchableOpacity
@@ -273,7 +289,7 @@ export default function OnboardingScreen() {
               value={formData.weight}
               onChangeText={(value) => handleInputChange('weight', value)}
               keyboardType="numeric"
-              placeholderTextColor="#666"
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
             />
             <View style={styles.unitSelector}>
               <TouchableOpacity
@@ -331,7 +347,7 @@ export default function OnboardingScreen() {
                   </Text>
                 </View>
                 <TouchableOpacity style={styles.helpButton}>
-                  <Feather name="help-circle" size={20} color="#666" />
+                  <Feather name="help-circle" size={16} color="rgba(255, 255, 255, 0.5)" />
                 </TouchableOpacity>
               </TouchableOpacity>
             ))}
@@ -353,8 +369,8 @@ export default function OnboardingScreen() {
                 >
                   <Feather
                     name={goal.icon as any}
-                    size={32}
-                    color={formData.fitnessGoal === goal.id ? '#4ADE80' : '#666'}
+                    size={24}
+                    color={formData.fitnessGoal === goal.id ? '#4ADE80' : 'rgba(255, 255, 255, 0.7)'}
                   />
                   <Text style={[
                     styles.goalLabel,
@@ -382,7 +398,7 @@ export default function OnboardingScreen() {
         {/* Progress Indicators */}
         <View style={styles.progressContainer}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Feather name="chevron-left" size={24} color="#fff" />
+            <Feather name="chevron-left" size={20} color="#fff" />
           </TouchableOpacity>
           <View style={styles.progressDots}>
             {steps.map((_, index) => (
@@ -419,7 +435,7 @@ export default function OnboardingScreen() {
             <Text style={styles.nextButtonText}>
               {currentStep === steps.length - 1 ? 'Complete' : 'NEXT'}
             </Text>
-            <Feather name="chevron-right" size={20} color="#000" />
+            <Feather name="chevron-right" size={16} color="#000" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -440,77 +456,77 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 30,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   progressDots: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
   },
   progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   progressDotActive: {
     backgroundColor: '#4ADE80',
-    width: 24,
+    width: 20,
   },
   progressDotCompleted: {
     backgroundColor: '#4ADE80',
   },
   placeholder: {
-    width: 40,
+    width: 32,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
   },
   titleContainer: {
-    marginBottom: 60,
+    marginBottom: 40,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: '#fff',
-    marginBottom: 12,
-    letterSpacing: -1,
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: 'rgba(255, 255, 255, 0.7)',
-    lineHeight: 24,
+    lineHeight: 20,
   },
   stepContainer: {
     flex: 1,
   },
   nameInput: {
-    fontSize: 24,
+    fontSize: 20,
     color: '#fff',
-    borderBottomWidth: 2,
+    borderBottomWidth: 1.5,
     borderBottomColor: '#4ADE80',
-    paddingVertical: 16,
-    marginTop: 40,
+    paddingVertical: 12,
+    marginTop: 30,
   },
   genderContainer: {
-    gap: 16,
-    marginTop: 40,
+    gap: 12,
+    marginTop: 30,
   },
   genderOption: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 2,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1.5,
     borderColor: 'transparent',
   },
   genderOptionSelected: {
@@ -518,9 +534,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(74, 222, 128, 0.1)',
   },
   genderText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#fff',
-    marginLeft: 16,
+    marginLeft: 12,
     fontWeight: '500',
   },
   genderTextSelected: {
@@ -530,50 +546,50 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 40,
-    borderWidth: 2,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 30,
+    borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   inputIcon: {
-    marginRight: 16,
+    marginRight: 12,
   },
   birthdayText: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 16,
     color: '#fff',
   },
   measurementInput: {
-    fontSize: 24,
+    fontSize: 20,
     color: '#fff',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 40,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 30,
     textAlign: 'center',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   unitSelector: {
     flexDirection: 'row',
-    marginTop: 20,
-    gap: 12,
+    marginTop: 16,
+    gap: 8,
   },
   unitOption: {
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 8,
+    padding: 12,
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: 'transparent',
   },
   unitOptionSelected: {
     backgroundColor: '#4ADE80',
   },
   unitText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#fff',
     fontWeight: '600',
   },
@@ -584,10 +600,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 2,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1.5,
     borderColor: 'transparent',
   },
   activityOptionSelected: {
@@ -598,37 +614,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   activityLabel: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#fff',
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   activityLabelSelected: {
     color: '#4ADE80',
   },
   activityDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: 'rgba(255, 255, 255, 0.7)',
   },
   activityDescriptionSelected: {
     color: 'rgba(74, 222, 128, 0.8)',
   },
   helpButton: {
-    padding: 8,
+    padding: 6,
   },
   goalsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
-    marginTop: 40,
+    gap: 12,
+    marginTop: 30,
   },
   goalOption: {
-    width: (width - 80) / 2,
+    width: (width - 60) / 2,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 12,
+    padding: 20,
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: 'transparent',
   },
   goalOptionSelected: {
@@ -636,36 +652,36 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(74, 222, 128, 0.1)',
   },
   goalLabel: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#fff',
     fontWeight: '600',
-    marginTop: 12,
+    marginTop: 8,
     textAlign: 'center',
   },
   goalLabelSelected: {
     color: '#4ADE80',
   },
   footer: {
-    paddingHorizontal: 32,
-    paddingBottom: 40,
+    paddingHorizontal: 24,
+    paddingBottom: 30,
   },
   nextButton: {
     backgroundColor: '#4ADE80',
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 32,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
   },
   nextButtonDisabled: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   nextButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: '#000',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 });

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { searchFood, FoodItem, getAllCategories } from '@/data/indianFoodData';
+import { LinearGradient } from 'expo-linear-gradient';
+import { getFoodNutrition, FoodNutrition } from '@/utils/geminiApi';
 
 interface FoodEntry {
   id: string;
@@ -20,34 +21,35 @@ interface FoodEntry {
 export default function LogFoodScreen() {
   const [selectedMeal, setSelectedMeal] = useState<'breakfast' | 'lunch' | 'dinner'>('breakfast');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
-  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
-  const [quantity, setQuantity] = useState('1');
+  const [selectedFood, setSelectedFood] = useState<FoodNutrition | null>(null);
+  const [quantity, setQuantity] = useState('100');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      const results = searchFood(query);
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      Alert.alert('Error', 'Please enter a food item to search');
+      return;
     }
-  };
 
-  const handleFoodSelect = (food: FoodItem) => {
-    setSelectedFood(food);
-    setSearchResults([]);
-    setSearchQuery(food.name);
+    setLoading(true);
+    try {
+      const nutrition = await getFoodNutrition(searchQuery);
+      setSelectedFood(nutrition);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to get nutrition information. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogFood = async () => {
     if (!selectedFood) {
-      Alert.alert('Error', 'Please select a food item');
+      Alert.alert('Error', 'Please search for a food item first');
       return;
     }
 
-    const multiplier = parseFloat(quantity) || 1;
+    const multiplier = parseFloat(quantity) / 100 || 1;
     const entry: FoodEntry = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
@@ -83,142 +85,151 @@ export default function LogFoodScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="chevron-left" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Log Food</Text>
-        <TouchableOpacity onPress={handleLogFood} style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
+    <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Feather name="chevron-left" size={20} color="#4ADE80" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Log Food</Text>
+          <TouchableOpacity onPress={handleLogFood} style={styles.saveButton}>
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Meal Selection */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Meal</Text>
-          <View style={styles.mealSelector}>
-            {(['breakfast', 'lunch', 'dinner'] as const).map((meal) => (
-              <TouchableOpacity
-                key={meal}
-                style={[
-                  styles.mealOption,
-                  selectedMeal === meal && styles.mealOptionSelected
-                ]}
-                onPress={() => setSelectedMeal(meal)}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Meal Selection */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Select Meal</Text>
+            <View style={styles.mealSelector}>
+              {(['breakfast', 'lunch', 'dinner'] as const).map((meal) => (
+                <TouchableOpacity
+                  key={meal}
+                  style={[
+                    styles.mealOption,
+                    selectedMeal === meal && styles.mealOptionSelected
+                  ]}
+                  onPress={() => setSelectedMeal(meal)}
+                >
+                  <View style={styles.mealIconContainer}>
+                    <Feather 
+                      name={getMealIcon(meal)} 
+                      size={14} 
+                      color={selectedMeal === meal ? '#000000' : '#4ADE80'} 
+                    />
+                  </View>
+                  <Text style={[
+                    styles.mealOptionText,
+                    selectedMeal === meal && styles.mealOptionTextSelected
+                  ]}>
+                    {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Food Search */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Search Food</Text>
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Enter any food item..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                onSubmitEditing={handleSearch}
+              />
+              <TouchableOpacity 
+                style={styles.searchButton} 
+                onPress={handleSearch}
+                disabled={loading}
               >
-                <View style={styles.mealIconContainer}>
-                  <Feather 
-                    name={getMealIcon(meal)} 
-                    size={16} 
-                    color={selectedMeal === meal ? '#FFFFFF' : '#007AFF'} 
+                {loading ? (
+                  <ActivityIndicator size="small" color="#000000" />
+                ) : (
+                  <Feather name="search" size={16} color="#000000" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Selected Food */}
+          {selectedFood && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Nutrition Information</Text>
+              <View style={styles.selectedFoodCard}>
+                <View style={styles.selectedFoodHeader}>
+                  <Text style={styles.selectedFoodName}>{selectedFood.name}</Text>
+                  <TouchableOpacity onPress={() => setSelectedFood(null)}>
+                    <Feather name="x" size={18} color="rgba(255, 255, 255, 0.7)" />
+                  </TouchableOpacity>
+                </View>
+                
+                <Text style={styles.servingSize}>Per {quantity}g serving</Text>
+                
+                <View style={styles.nutritionGrid}>
+                  <View style={styles.nutritionItem}>
+                    <Text style={styles.nutritionValue}>
+                      {Math.round(selectedFood.calories * parseFloat(quantity) / 100)}
+                    </Text>
+                    <Text style={styles.nutritionLabel}>Calories</Text>
+                  </View>
+                  <View style={styles.nutritionItem}>
+                    <Text style={styles.nutritionValue}>
+                      {Math.round(selectedFood.protein * parseFloat(quantity) / 100 * 10) / 10}g
+                    </Text>
+                    <Text style={styles.nutritionLabel}>Protein</Text>
+                  </View>
+                  <View style={styles.nutritionItem}>
+                    <Text style={styles.nutritionValue}>
+                      {Math.round(selectedFood.carbs * parseFloat(quantity) / 100 * 10) / 10}g
+                    </Text>
+                    <Text style={styles.nutritionLabel}>Carbs</Text>
+                  </View>
+                  <View style={styles.nutritionItem}>
+                    <Text style={styles.nutritionValue}>
+                      {Math.round(selectedFood.fat * parseFloat(quantity) / 100 * 10) / 10}g
+                    </Text>
+                    <Text style={styles.nutritionLabel}>Fat</Text>
+                  </View>
+                </View>
+
+                <View style={styles.quantityContainer}>
+                  <Text style={styles.quantityLabel}>Quantity (grams)</Text>
+                  <TextInput
+                    style={styles.quantityInput}
+                    value={quantity}
+                    onChangeText={setQuantity}
+                    keyboardType="decimal-pad"
+                    placeholder="100"
+                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
                   />
                 </View>
-                <Text style={[
-                  styles.mealOptionText,
-                  selectedMeal === meal && styles.mealOptionTextSelected
-                ]}>
-                  {meal.charAt(0).toUpperCase() + meal.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Food Search */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Search Food</Text>
-          <View style={styles.searchContainer}>
-            <Feather name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search Indian foods..."
-              value={searchQuery}
-              onChangeText={handleSearch}
-              placeholderTextColor="#C6C6C8"
-            />
-          </View>
-
-          {searchResults.length > 0 && (
-            <View style={styles.searchResults}>
-              <FlatList
-                data={searchResults}
-                keyExtractor={(item) => item.name}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.foodItem}
-                    onPress={() => handleFoodSelect(item)}
-                  >
-                    <View style={styles.foodInfo}>
-                      <Text style={styles.foodName}>{item.name}</Text>
-                      <Text style={styles.foodDetails}>
-                        {item.calories} cal • {item.protein}g protein • {item.category}
-                      </Text>
-                    </View>
-                    <Feather name="plus-circle" size={20} color="#007AFF" />
-                  </TouchableOpacity>
-                )}
-                scrollEnabled={false}
-              />
+              </View>
             </View>
           )}
-        </View>
 
-        {/* Selected Food */}
-        {selectedFood && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Selected Food</Text>
-            <View style={styles.selectedFoodCard}>
-              <View style={styles.selectedFoodHeader}>
-                <Text style={styles.selectedFoodName}>{selectedFood.name}</Text>
-                <TouchableOpacity onPress={() => setSelectedFood(null)}>
-                  <Feather name="x" size={20} color="#8E8E93" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.nutritionInfo}>
-                <View style={styles.nutritionItem}>
-                  <Text style={styles.nutritionValue}>{Math.round(selectedFood.calories * parseFloat(quantity || '1'))}</Text>
-                  <Text style={styles.nutritionLabel}>Calories</Text>
-                </View>
-                <View style={styles.nutritionItem}>
-                  <Text style={styles.nutritionValue}>{Math.round(selectedFood.protein * parseFloat(quantity || '1') * 10) / 10}g</Text>
-                  <Text style={styles.nutritionLabel}>Protein</Text>
-                </View>
-                <View style={styles.nutritionItem}>
-                  <Text style={styles.nutritionValue}>{Math.round(selectedFood.carbs * parseFloat(quantity || '1') * 10) / 10}g</Text>
-                  <Text style={styles.nutritionLabel}>Carbs</Text>
-                </View>
-                <View style={styles.nutritionItem}>
-                  <Text style={styles.nutritionValue}>{Math.round(selectedFood.fat * parseFloat(quantity || '1') * 10) / 10}g</Text>
-                  <Text style={styles.nutritionLabel}>Fat</Text>
-                </View>
-              </View>
-
-              <View style={styles.quantityContainer}>
-                <Text style={styles.quantityLabel}>Quantity</Text>
-                <TextInput
-                  style={styles.quantityInput}
-                  value={quantity}
-                  onChangeText={setQuantity}
-                  keyboardType="decimal-pad"
-                  placeholder="1"
-                  placeholderTextColor="#C6C6C8"
-                />
-              </View>
+          {!selectedFood && !loading && (
+            <View style={styles.emptyState}>
+              <Feather name="search" size={48} color="rgba(255, 255, 255, 0.3)" />
+              <Text style={styles.emptyText}>Search for any food item</Text>
+              <Text style={styles.emptySubtext}>Get instant nutrition information powered by AI</Text>
             </View>
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -226,40 +237,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 20,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   saveButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    shadowColor: '#007AFF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    backgroundColor: '#4ADE80',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: '#000000',
+    fontSize: 14,
     fontWeight: '600',
   },
   content: {
@@ -267,139 +268,105 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   mealSelector: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 10,
+    padding: 3,
   },
   mealOption: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 7,
+    gap: 6,
   },
   mealOptionSelected: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4ADE80',
   },
   mealIconContainer: {
-    marginRight: 8,
+    marginRight: 4,
   },
   mealOptionText: {
-    fontSize: 14,
-    color: '#8E8E93',
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.7)',
     fontWeight: '500',
   },
   mealOptionTextSelected: {
-    color: '#FFFFFF',
+    color: '#000000',
   },
   searchContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 10,
     paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  searchIcon: {
-    marginRight: 12,
+    alignItems: 'center',
+    gap: 12,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: '#000000',
+    paddingVertical: 14,
+    fontSize: 15,
+    color: '#FFFFFF',
   },
-  searchResults: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  foodItem: {
-    flexDirection: 'row',
+  searchButton: {
+    backgroundColor: '#4ADE80',
+    borderRadius: 8,
+    padding: 8,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#F2F2F7',
-  },
-  foodInfo: {
-    flex: 1,
-  },
-  foodName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  foodDetails: {
-    fontSize: 13,
-    color: '#8E8E93',
   },
   selectedFoodCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   selectedFoodHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   selectedFoodName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     flex: 1,
   },
-  nutritionInfo: {
+  servingSize: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginBottom: 16,
+  },
+  nutritionGrid: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 16,
     paddingVertical: 12,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 8,
   },
   nutritionItem: {
     alignItems: 'center',
   },
   nutritionValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#007AFF',
+    color: '#4ADE80',
   },
   nutritionLabel: {
-    fontSize: 12,
-    color: '#8E8E93',
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 2,
   },
   quantityContainer: {
@@ -408,18 +375,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   quantityLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   quantityInput: {
-    backgroundColor: '#F2F2F7',
-    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    fontSize: 16,
-    color: '#000000',
+    fontSize: 14,
+    color: '#FFFFFF',
     width: 80,
+    textAlign: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginTop: 4,
     textAlign: 'center',
   },
 });

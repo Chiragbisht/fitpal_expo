@@ -8,8 +8,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: '#4ADE80',
+        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarIconStyle: styles.tabBarIcon,
         tabBarShowLabel: false,
@@ -19,7 +19,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={22} color={color} />
+            <Feather name="home" size={20} color={color} />
           ),
         }}
       />
@@ -28,7 +28,7 @@ export default function TabLayout() {
         options={{
           title: 'Workout',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="activity" size={22} color={color} />
+            <Feather name="activity" size={20} color={color} />
           ),
         }}
       />
@@ -37,7 +37,7 @@ export default function TabLayout() {
         options={{
           title: 'Add',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="plus" size={24} color="#FFFFFF" />
+            <Feather name="plus" size={22} color="#000000" />
           ),
           tabBarIconStyle: styles.addButton,
         }}
@@ -47,7 +47,7 @@ export default function TabLayout() {
         options={{
           title: 'Diet',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="coffee" size={22} color={color} />
+            <Feather name="coffee" size={20} color={color} />
           ),
         }}
       />
@@ -56,7 +56,7 @@ export default function TabLayout() {
         options={{
           title: 'More',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="menu" size={22} color={color} />
+            <Feather name="menu" size={20} color={color} />
           ),
         }}
       />
@@ -66,17 +66,12 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1a1a1a',
     borderTopWidth: 0.5,
-    borderTopColor: '#C6C6C8',
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
     paddingBottom: 8,
     paddingTop: 8,
     height: 84,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
   },
   tabBarLabel: {
     fontSize: 10,
@@ -87,17 +82,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   addButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    backgroundColor: '#4ADE80',
+    borderRadius: 18,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -10,
-    shadowColor: '#007AFF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    marginTop: -8,
   },
 });
