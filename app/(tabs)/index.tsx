@@ -224,7 +224,7 @@ export default function HomeScreen() {
                 })}
               </ScrollView>
             </View>
-          </div>
+          </View>
 
           {/* Stats Cards */}
           <View style={styles.statsContainer}>
