@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Animated, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Dimensions, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { saveUserData } from '@/utils/userData';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withSpring,
+  FadeInUp,
+  FadeInDown,
+  SlideInRight,
+  SlideOutLeft
+} from 'react-native-reanimated';
 
 const { width, height } = Dimensions.get('window');
 
@@ -53,9 +63,11 @@ export default function OnboardingScreen() {
     fitnessGoal: '',
   });
   const [currentStep, setCurrentStep] = useState(0);
-  const [slideAnim] = useState(new Animated.Value(0));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const router = useRouter();
+
+  const slideX = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
   const steps = [
     { title: "What's your name?", subtitle: "We'll use this to personalize your experience" },
@@ -71,37 +83,36 @@ export default function OnboardingScreen() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const animateToNext = () => {
-    Animated.timing(slideAnim, {
-      toValue: -width,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
+  const animateToNext = async () => {
+    opacity.value = withTiming(0, { duration: 200 });
+    slideX.value = withTiming(-width, { duration: 300 });
+    
+    setTimeout(() => {
       setCurrentStep(prev => prev + 1);
-      slideAnim.setValue(width);
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    });
+      slideX.value = width;
+      slideX.value = withSpring(0, { damping: 20, stiffness: 90 });
+      opacity.value = withTiming(1, { duration: 300 });
+    }, 300);
   };
 
-  const animateToBack = () => {
-    Animated.timing(slideAnim, {
-      toValue: width,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
+  const animateToBack = async () => {
+    opacity.value = withTiming(0, { duration: 200 });
+    slideX.value = withTiming(width, { duration: 300 });
+    
+    setTimeout(() => {
       setCurrentStep(prev => prev - 1);
-      slideAnim.setValue(-width);
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    });
+      slideX.value = -width;
+      slideX.value = withSpring(0, { damping: 20, stiffness: 90 });
+      opacity.value = withTiming(1, { duration: 300 });
+    }, 300);
   };
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: slideX.value }],
+      opacity: opacity.value,
+    };
+  });
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -164,7 +175,8 @@ export default function OnboardingScreen() {
   };
 
   const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    const currentDate = selectedDate || formData.birthday || new Date();
+    setShowDatePicker(false);
     if (selectedDate) {
       handleInputChange('birthday', selectedDate);
     }
@@ -174,7 +186,7 @@ export default function OnboardingScreen() {
     switch (currentStep) {
       case 0:
         return (
-          <View style={styles.stepContainer}>
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.stepContainer}>
             <TextInput
               style={styles.nameInput}
               placeholder="Enter your name"
@@ -183,16 +195,19 @@ export default function OnboardingScreen() {
               placeholderTextColor="rgba(255, 255, 255, 0.5)"
               autoFocus
             />
-          </View>
+          </Animated.View>
         );
 
       case 1:
         return (
-          <View style={styles.stepContainer}>
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.stepContainer}>
             <View style={styles.genderContainer}>
-              {genderOptions.map((option) => (
-                <TouchableOpacity
+              {genderOptions.map((option, index) => (
+                <Animated.View
                   key={option.id}
+                  entering={FadeInUp.delay(200 + index * 100)}
+                >
+                  <TouchableOpacity
                   style={[
                     styles.genderOption,
                     formData.gender === option.id && styles.genderOptionSelected
@@ -211,14 +226,15 @@ export default function OnboardingScreen() {
                     {option.label}
                   </Text>
                 </TouchableOpacity>
+                </Animated.View>
               ))}
             </View>
-          </View>
+          </Animated.View>
         );
 
       case 2:
         return (
-          <View style={styles.stepContainer}>
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.stepContainer}>
             <TouchableOpacity 
               style={styles.birthdayInput}
               onPress={() => setShowDatePicker(true)}
@@ -232,17 +248,19 @@ export default function OnboardingScreen() {
               <DateTimePicker
                 value={formData.birthday || new Date()}
                 mode="date"
-                display="default"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={onDateChange}
                 maximumDate={new Date()}
+                minimumDate={new Date(1900, 0, 1)}
+                themeVariant="dark"
               />
             )}
-          </View>
+          </Animated.View>
         );
 
       case 3:
         return (
-          <View style={styles.stepContainer}>
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.stepContainer}>
             <TextInput
               style={styles.measurementInput}
               placeholder="Height"
@@ -251,7 +269,7 @@ export default function OnboardingScreen() {
               keyboardType="numeric"
               placeholderTextColor="rgba(255, 255, 255, 0.5)"
             />
-            <View style={styles.unitSelector}>
+            <Animated.View entering={FadeInUp.delay(200)} style={styles.unitSelector}>
               <TouchableOpacity
                 style={[
                   styles.unitOption,
@@ -276,13 +294,13 @@ export default function OnboardingScreen() {
                   formData.heightUnit === 'ft' && styles.unitTextSelected
                 ]}>ft</Text>
               </TouchableOpacity>
-            </View>
-          </View>
+            </Animated.View>
+          </Animated.View>
         );
 
       case 4:
         return (
-          <View style={styles.stepContainer}>
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.stepContainer}>
             <TextInput
               style={styles.measurementInput}
               placeholder="Weight"
@@ -291,7 +309,7 @@ export default function OnboardingScreen() {
               keyboardType="numeric"
               placeholderTextColor="rgba(255, 255, 255, 0.5)"
             />
-            <View style={styles.unitSelector}>
+            <Animated.View entering={FadeInUp.delay(200)} style={styles.unitSelector}>
               <TouchableOpacity
                 style={[
                   styles.unitOption,
@@ -316,16 +334,19 @@ export default function OnboardingScreen() {
                   formData.weightUnit === 'lbs' && styles.unitTextSelected
                 ]}>lbs</Text>
               </TouchableOpacity>
-            </View>
-          </View>
+            </Animated.View>
+          </Animated.View>
         );
 
       case 5:
         return (
-          <View style={styles.stepContainer}>
-            {activityLevels.map((level) => (
-              <TouchableOpacity
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.stepContainer}>
+            {activityLevels.map((level, index) => (
+              <Animated.View
                 key={level.id}
+                entering={FadeInUp.delay(200 + index * 100)}
+              >
+                <TouchableOpacity
                 style={[
                   styles.activityOption,
                   formData.activityLevel === level.id && styles.activityOptionSelected
@@ -350,17 +371,21 @@ export default function OnboardingScreen() {
                   <Feather name="help-circle" size={16} color="rgba(255, 255, 255, 0.5)" />
                 </TouchableOpacity>
               </TouchableOpacity>
+              </Animated.View>
             ))}
-          </View>
+          </Animated.View>
         );
 
       case 6:
         return (
-          <View style={styles.stepContainer}>
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.stepContainer}>
             <View style={styles.goalsGrid}>
-              {fitnessGoals.map((goal) => (
-                <TouchableOpacity
+              {fitnessGoals.map((goal, index) => (
+                <Animated.View
                   key={goal.id}
+                  entering={FadeInUp.delay(200 + index * 100)}
+                >
+                  <TouchableOpacity
                   style={[
                     styles.goalOption,
                     formData.fitnessGoal === goal.id && styles.goalOptionSelected
@@ -379,9 +404,10 @@ export default function OnboardingScreen() {
                     {goal.label}
                   </Text>
                 </TouchableOpacity>
+                </Animated.View>
               ))}
             </View>
-          </View>
+          </Animated.View>
         );
 
       default:
@@ -396,14 +422,19 @@ export default function OnboardingScreen() {
     >
       <SafeAreaView style={styles.safeArea}>
         {/* Progress Indicators */}
-        <View style={styles.progressContainer}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+        <Animated.View entering={FadeInDown.delay(100)} style={styles.progressContainer}>
+          <TouchableOpacity 
+            onPress={handleBack} 
+            style={[styles.backButton, currentStep === 0 && styles.backButtonDisabled]}
+            disabled={currentStep === 0}
+          >
             <Feather name="chevron-left" size={20} color="#fff" />
           </TouchableOpacity>
           <View style={styles.progressDots}>
             {steps.map((_, index) => (
-              <View
+              <Animated.View
                 key={index}
+                entering={FadeInUp.delay(300 + index * 50)}
                 style={[
                   styles.progressDot,
                   index === currentStep && styles.progressDotActive,
@@ -413,20 +444,20 @@ export default function OnboardingScreen() {
             ))}
           </View>
           <View style={styles.placeholder} />
-        </View>
+        </Animated.View>
 
         {/* Content */}
-        <Animated.View style={[styles.content, { transform: [{ translateX: slideAnim }] }]}>
-          <View style={styles.titleContainer}>
+        <Animated.View style={[styles.content, animatedStyle]}>
+          <Animated.View entering={FadeInUp.delay(200)} style={styles.titleContainer}>
             <Text style={styles.title}>{steps[currentStep].title}</Text>
             <Text style={styles.subtitle}>{steps[currentStep].subtitle}</Text>
-          </View>
+          </Animated.View>
 
           {renderStep()}
         </Animated.View>
 
         {/* Next Button */}
-        <View style={styles.footer}>
+        <Animated.View entering={FadeInUp.delay(400)} style={styles.footer}>
           <TouchableOpacity
             style={[styles.nextButton, !isStepValid() && styles.nextButtonDisabled]}
             onPress={handleNext}
@@ -437,7 +468,7 @@ export default function OnboardingScreen() {
             </Text>
             <Feather name="chevron-right" size={16} color="#000" />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -466,6 +497,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  backButtonDisabled: {
+    opacity: 0.3,
+  },
   progressDots: {
     flexDirection: 'row',
     gap: 6,
@@ -475,6 +509,7 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    transition: 'all 0.3s ease',
   },
   progressDotActive: {
     backgroundColor: '#4ADE80',
@@ -528,10 +563,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1.5,
     borderColor: 'transparent',
+    transform: [{ scale: 1 }],
   },
   genderOptionSelected: {
     borderColor: '#4ADE80',
     backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    transform: [{ scale: 1.02 }],
   },
   genderText: {
     fontSize: 16,
@@ -550,7 +587,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 30,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: formData.birthday ? '#4ADE80' : 'rgba(255, 255, 255, 0.1)',
   },
   inputIcon: {
     marginRight: 12,
@@ -558,7 +595,7 @@ const styles = StyleSheet.create({
   birthdayText: {
     flex: 1,
     fontSize: 16,
-    color: '#fff',
+    color: formData.birthday ? '#4ADE80' : 'rgba(255, 255, 255, 0.7)',
   },
   measurementInput: {
     fontSize: 20,
@@ -584,9 +621,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: 'transparent',
+    transform: [{ scale: 1 }],
   },
   unitOptionSelected: {
     backgroundColor: '#4ADE80',
+    transform: [{ scale: 1.05 }],
   },
   unitText: {
     fontSize: 14,
@@ -605,10 +644,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1.5,
     borderColor: 'transparent',
+    transform: [{ scale: 1 }],
   },
   activityOptionSelected: {
     borderColor: '#4ADE80',
     backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    transform: [{ scale: 1.02 }],
   },
   activityContent: {
     flex: 1,
@@ -646,10 +687,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: 'transparent',
+    transform: [{ scale: 1 }],
   },
   goalOptionSelected: {
     borderColor: '#4ADE80',
     backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    transform: [{ scale: 1.05 }],
   },
   goalLabel: {
     fontSize: 14,
@@ -674,9 +717,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    shadowColor: '#4ADE80',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   nextButtonDisabled: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   nextButtonText: {
     fontSize: 14,
