@@ -84,10 +84,13 @@ export default function OnboardingScreen() {
   };
 
   const animateToNext = async () => {
+    if (!isMounted.current) return;
+    
     opacity.value = withTiming(0, { duration: 200 });
     slideX.value = withTiming(-width, { duration: 300 });
     
     setTimeout(() => {
+      if (!isMounted.current) return;
       setCurrentStep(prev => prev + 1);
       slideX.value = width;
       slideX.value = withSpring(0, { damping: 20, stiffness: 90 });
@@ -96,10 +99,13 @@ export default function OnboardingScreen() {
   };
 
   const animateToBack = async () => {
+    if (!isMounted.current) return;
+    
     opacity.value = withTiming(0, { duration: 200 });
     slideX.value = withTiming(width, { duration: 300 });
     
     setTimeout(() => {
+      if (!isMounted.current) return;
       setCurrentStep(prev => prev - 1);
       slideX.value = -width;
       slideX.value = withSpring(0, { damping: 20, stiffness: 90 });
@@ -236,11 +242,17 @@ export default function OnboardingScreen() {
         return (
           <Animated.View entering={FadeInUp.delay(100)} style={styles.stepContainer}>
             <TouchableOpacity 
-              style={styles.birthdayInput}
+              style={[
+                styles.birthdayInput,
+                formData.birthday && { borderColor: '#4ADE80' }
+              ]}
               onPress={() => setShowDatePicker(true)}
             >
               <Feather name="calendar" size={18} color="#4ADE80" style={styles.inputIcon} />
-              <Text style={styles.birthdayText}>
+              <Text style={[
+                styles.birthdayText,
+                formData.birthday && { color: '#4ADE80' }
+              ]}>
                 {formData.birthday ? formData.birthday.toLocaleDateString() : 'Select Birthday'}
               </Text>
             </TouchableOpacity>
@@ -587,7 +599,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 30,
     borderWidth: 1.5,
-    borderColor: formData.birthday ? '#4ADE80' : 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   inputIcon: {
     marginRight: 12,
@@ -595,7 +607,7 @@ const styles = StyleSheet.create({
   birthdayText: {
     flex: 1,
     fontSize: 16,
-    color: formData.birthday ? '#4ADE80' : 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   measurementInput: {
     fontSize: 20,
