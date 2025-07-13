@@ -5,6 +5,10 @@ export interface UserData {
   height: string;
   weight: string;
   age: string;
+  gender?: string;
+  birthday?: string;
+  heightUnit?: string;
+  weightUnit?: string;
   workoutLevel: string;
   fitnessGoal: string;
 }
