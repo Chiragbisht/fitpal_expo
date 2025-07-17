@@ -1,6 +1,6 @@
 import { UserData } from './userData';
 
-const GEMINI_API_KEY = 'AIzaSyBko7jF80LZ6xw8-2LQCvx8lScOvyI-a1Q';
+const GEMINI_API_KEY = 'AIzaSyAZ5xbVTgX4_6DtIZHSMtWljf6GtCPZjaE';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
 export interface DietPlan {
