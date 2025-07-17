@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { saveUserData } from '@/utils/userData';
 import { LinearGradient } from 'expo-linear-gradient';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -16,6 +15,7 @@ import Animated, {
   SlideInRight,
   SlideOutLeft
 } from 'react-native-reanimated';
+import CalendarPicker from '@/components/CalendarPicker';
 
 const { width, height } = Dimensions.get('window');
 
@@ -63,7 +63,7 @@ export default function OnboardingScreen() {
     fitnessGoal: '',
   });
   const [currentStep, setCurrentStep] = useState(0);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const router = useRouter();
 
   const isMounted = useRef(false);
@@ -189,12 +189,9 @@ export default function OnboardingScreen() {
     }
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || formData.birthday || new Date();
-    setShowDatePicker(false);
-    if (selectedDate) {
-      handleInputChange('birthday', selectedDate);
-    }
+  const handleDateSelect = (selectedDate: Date) => {
+    handleInputChange('birthday', selectedDate);
+    setShowCalendar(false);
   };
 
   const renderStep = () => {
@@ -255,7 +252,7 @@ export default function OnboardingScreen() {
                 styles.birthdayInput,
                 formData.birthday && { borderColor: '#4ADE80' }
               ]}
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => setShowCalendar(true)}
             >
               <Feather name="calendar" size={18} color="#4ADE80" style={styles.inputIcon} />
               <Text style={[
@@ -265,17 +262,12 @@ export default function OnboardingScreen() {
                 {formData.birthday ? formData.birthday.toLocaleDateString() : 'Select Birthday'}
               </Text>
             </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={formData.birthday || new Date()}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={onDateChange}
-                maximumDate={new Date()}
-                minimumDate={new Date(1900, 0, 1)}
-                themeVariant="dark"
-              />
-            )}
+            <CalendarPicker
+              selectedDate={formData.birthday}
+              onDateSelect={handleDateSelect}
+              visible={showCalendar}
+              onClose={() => setShowCalendar(false)}
+            />
           </Animated.View>
         );
 
