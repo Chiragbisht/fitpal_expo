@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function MoreScreen() {
   const router = useRouter();
@@ -16,12 +17,12 @@ export default function MoreScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>More</Text>
-      </View>
+    <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <Text style={styles.title}>More</Text>
+        </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {menuItems.map((item) => (
           <TouchableOpacity
             key={item.id}
@@ -38,15 +39,18 @@ export default function MoreScreen() {
             <Feather name="chevron-right" size={20} color="#C6C6C8" />
           </TouchableOpacity>
         ))}
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     paddingHorizontal: 20,
@@ -56,7 +60,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: '700',
-    color: '#000000',
+    color: '#FFFFFF',
     letterSpacing: -1,
   },
   content: {
@@ -64,7 +68,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   menuItem: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -80,7 +84,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: 'rgba(74, 222, 128, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -91,11 +95,11 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   menuSubtitle: {
     fontSize: 13,
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 2,
   },
 });

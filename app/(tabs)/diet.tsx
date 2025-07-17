@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIn
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getUserData } from '@/utils/userData';
+import { LinearGradient } from 'expo-linear-gradient';
 import { generateDietPlan } from '@/utils/geminiApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -183,23 +184,23 @@ export default function DietScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Diet</Text>
-        <TouchableOpacity
-          style={styles.generateButton}
-          onPress={handleGenerateDiet}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#007AFF" />
-          ) : (
-            <Feather name="plus" size={16} color="#007AFF" />
-          )}
-        </TouchableOpacity>
-      </View>
+    <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Diet</Text>
+          <TouchableOpacity
+            style={styles.generateButton}
+            onPress={handleGenerateDiet}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#4ADE80" />
+            ) : (
+              <Feather name="plus" size={16} color="#4ADE80" />
+            )}
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Today's Nutrition */}
         <View style={styles.nutritionCard}>
           <Text style={styles.nutritionTitle}>Today's Nutrition</Text>
@@ -331,15 +332,18 @@ export default function DietScreen() {
             <Text style={styles.emptySubtext}>Generate your first personalized diet plan</Text>
           </View>
         )}
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -352,14 +356,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: '700',
-    color: '#000000',
+    color: '#FFFFFF',
     letterSpacing: -1,
   },
   generateButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -373,7 +377,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   nutritionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
@@ -386,7 +390,7 @@ const styles = StyleSheet.create({
   nutritionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   calorieProgress: {
@@ -400,22 +404,22 @@ const styles = StyleSheet.create({
   calorieCount: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#007AFF',
+    color: '#4ADE80',
   },
   calorieLabel: {
     fontSize: 16,
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginLeft: 4,
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4ADE80',
     borderRadius: 4,
   },
   mealBreakdown: {
@@ -428,11 +432,11 @@ const styles = StyleSheet.create({
   mealStatValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   mealStatLabel: {
     fontSize: 13,
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 2,
   },
   section: {
@@ -441,7 +445,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 16,
     letterSpacing: -0.5,
   },
@@ -449,7 +453,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   planCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
     marginRight: 12,
@@ -462,7 +466,7 @@ const styles = StyleSheet.create({
   },
   planCardSelected: {
     borderWidth: 2,
-    borderColor: '#007AFF',
+    borderColor: '#4ADE80',
   },
   planHeader: {
     flexDirection: 'row',
@@ -473,15 +477,15 @@ const styles = StyleSheet.create({
   planName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     flex: 1,
   },
   planDate: {
     fontSize: 12,
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.6)',
   },
   mealCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -500,7 +504,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: 'rgba(74, 222, 128, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -508,15 +512,15 @@ const styles = StyleSheet.create({
   mealName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   mealContent: {
     fontSize: 15,
-    color: '#000000',
+    color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 22,
   },
   tipsCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
     marginTop: 12,
@@ -529,7 +533,7 @@ const styles = StyleSheet.create({
   tipsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   tipItem: {
@@ -539,7 +543,7 @@ const styles = StyleSheet.create({
   },
   tipText: {
     fontSize: 14,
-    color: '#000000',
+    color: 'rgba(255, 255, 255, 0.9)',
     marginLeft: 8,
     flex: 1,
     lineHeight: 20,
@@ -551,12 +555,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 17,
     fontWeight: '500',
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 15,
-    color: '#C6C6C8',
+    color: 'rgba(255, 255, 255, 0.5)',
     marginTop: 4,
   },
 });

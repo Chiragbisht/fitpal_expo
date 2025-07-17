@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput,
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface WorkoutEntry {
   id: string;
@@ -107,12 +108,12 @@ export default function WorkoutScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Workouts</Text>
-      </View>
+    <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Workouts</Text>
+        </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categories</Text>
           <View style={styles.categoriesGrid}>
@@ -254,16 +255,19 @@ export default function WorkoutScreen() {
               </View>
             </ScrollView>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+          </View>
+        </Modal>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     paddingHorizontal: 20,
@@ -273,7 +277,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: '700',
-    color: '#000000',
+    color: '#FFFFFF',
     letterSpacing: -1,
   },
   content: {
@@ -286,7 +290,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 16,
     letterSpacing: -0.5,
   },
@@ -297,7 +301,7 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     width: '48%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -312,7 +316,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: 'rgba(74, 222, 128, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -320,12 +324,12 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   categoryExercises: {
     fontSize: 13,
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.6)',
     fontWeight: '400',
   },
   emptyState: {
@@ -335,16 +339,16 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 17,
     fontWeight: '500',
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 15,
-    color: '#C6C6C8',
+    color: 'rgba(255, 255, 255, 0.5)',
     marginTop: 4,
   },
   workoutCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -363,7 +367,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: 'rgba(74, 222, 128, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -374,11 +378,11 @@ const styles = StyleSheet.create({
   workoutName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   workoutDate: {
     fontSize: 13,
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 2,
   },
   deleteButton: {
@@ -391,15 +395,15 @@ const styles = StyleSheet.create({
   },
   workoutDetail: {
     fontSize: 14,
-    color: '#8E8E93',
-    backgroundColor: '#F2F2F7',
+    color: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   workoutNotes: {
     fontSize: 14,
-    color: '#000000',
+    color: 'rgba(255, 255, 255, 0.9)',
     marginTop: 8,
     fontStyle: 'italic',
   },
@@ -410,10 +414,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4ADE80',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#007AFF',
+    shadowColor: '#4ADE80',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

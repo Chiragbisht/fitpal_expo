@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function AddScreen() {
   const router = useRouter();
@@ -16,12 +17,12 @@ export default function AddScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Quick Add</Text>
-      </View>
+    <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Quick Add</Text>
+        </View>
 
-      <View style={styles.content}>
         <TouchableOpacity style={styles.actionCard} onPress={handleLogFood}>
           <View style={styles.actionIcon}>
             <Feather name="coffee" size={24} color="#007AFF" />
@@ -39,15 +40,18 @@ export default function AddScreen() {
           <Text style={styles.actionSubtitle}>Log your exercise session</Text>
           <Feather name="chevron-right" size={20} color="#C6C6C8" />
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     paddingHorizontal: 20,
@@ -57,7 +61,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: '700',
-    color: '#000000',
+    color: '#FFFFFF',
     letterSpacing: -1,
   },
   content: {
@@ -65,7 +69,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   actionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -81,7 +85,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: 'rgba(74, 222, 128, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -89,12 +93,12 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     flex: 1,
   },
   actionSubtitle: {
     fontSize: 15,
-    color: '#8E8E93',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 2,
     flex: 1,
   },
