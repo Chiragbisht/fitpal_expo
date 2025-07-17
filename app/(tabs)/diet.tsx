@@ -202,6 +202,7 @@ export default function DietScreen() {
         </View>
 
         {/* Today's Nutrition */}
+       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.nutritionCard}>
           <Text style={styles.nutritionTitle}>Today's Nutrition</Text>
           <View style={styles.calorieProgress}>
@@ -371,6 +372,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
   },
   content: {
     flex: 1,
