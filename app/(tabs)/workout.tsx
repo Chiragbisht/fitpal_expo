@@ -114,6 +114,7 @@ export default function WorkoutScreen() {
           <Text style={styles.title}>Workouts</Text>
         </View>
 
+        <ScrollView style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categories</Text>
           <View style={styles.categoriesGrid}>
@@ -165,7 +166,7 @@ export default function WorkoutScreen() {
             ))
           )}
         </View>
-      </ScrollView>
+        </ScrollView>
 
       <TouchableOpacity
         style={styles.floatingButton}
