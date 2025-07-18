@@ -23,6 +23,7 @@ export default function MoreScreen() {
           <Text style={styles.title}>More</Text>
         </View>
 
+        <ScrollView style={styles.content}>
         {menuItems.map((item) => (
           <TouchableOpacity
             key={item.id}
