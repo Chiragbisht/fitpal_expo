@@ -40,7 +40,6 @@ export default function AddScreen() {
           <Text style={styles.actionSubtitle}>Log your exercise session</Text>
           <Feather name="chevron-right" size={20} color="#C6C6C8" />
         </TouchableOpacity>
-        </View>
       </SafeAreaView>
     </LinearGradient>
   );

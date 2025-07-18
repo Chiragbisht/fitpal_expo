@@ -69,6 +69,7 @@ export default function AddWorkoutScreen() {
           </TouchableOpacity>
         </View>
 
+        <ScrollView style={styles.content}>
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Exercise *</Text>
           <TextInput
