@@ -28,8 +28,10 @@ export default function AddScreen() {
           <View style={styles.actionIcon}>
             <Feather name="coffee" size={24} color="#007AFF" />
           </View>
-          <Text style={styles.actionTitle}>Log Food</Text>
-          <Text style={styles.actionSubtitle}>Track your meals and calories</Text>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>Log Food</Text>
+            <Text style={styles.actionSubtitle}>Track your meals and calories</Text>
+          </View>
           <Feather name="chevron-right" size={20} color="#C6C6C8" />
         </TouchableOpacity>
 
@@ -37,8 +39,10 @@ export default function AddScreen() {
           <View style={styles.actionIcon}>
             <Feather name="activity" size={24} color="#007AFF" />
           </View>
-          <Text style={styles.actionTitle}>Add Workout</Text>
-          <Text style={styles.actionSubtitle}>Log your exercise session</Text>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>Add Workout</Text>
+            <Text style={styles.actionSubtitle}>Log your exercise session</Text>
+          </View>
           <Feather name="chevron-right" size={20} color="#C6C6C8" />
         </TouchableOpacity>
         </View>
@@ -96,16 +100,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  actionContent: {
+    flex: 1,
+  },
   actionTitle: {
     fontSize: 17,
     fontWeight: '600',
     color: '#FFFFFF',
-    flex: 1,
   },
   actionSubtitle: {
     fontSize: 15,
     color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 2,
-    flex: 1,
   },
 });

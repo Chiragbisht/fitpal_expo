@@ -169,13 +169,6 @@ export default function WorkoutScreen() {
         </View>
         </ScrollView>
 
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Feather name="plus" size={24} color="#FFFFFF" />
-      </TouchableOpacity>
-
       <Modal
         animationType="slide"
         transparent={true}
@@ -414,23 +407,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     marginTop: 8,
     fontStyle: 'italic',
-  },
-  floatingButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#4ADE80',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#007AFF',
-    shadowColor: '#4ADE80',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   modalOverlay: {
     flex: 1,

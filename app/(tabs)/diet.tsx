@@ -23,8 +23,19 @@ interface FoodEntry {
   id: string;
   date: string;
   meal: 'breakfast' | 'lunch' | 'dinner';
-  food: string;
+  foods: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>;
   calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
 interface NutritionData {

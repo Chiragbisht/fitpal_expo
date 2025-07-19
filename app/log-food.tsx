@@ -11,7 +11,15 @@ interface FoodEntry {
   id: string;
   date: string;
   meal: 'breakfast' | 'lunch' | 'dinner';
-  food: string;
+  foods: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>;
   calories: number;
   protein: number;
   carbs: number;
@@ -21,8 +29,11 @@ interface FoodEntry {
 export default function LogFoodScreen() {
   const [selectedMeal, setSelectedMeal] = useState<'breakfast' | 'lunch' | 'dinner'>('breakfast');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFood, setSelectedFood] = useState<FoodNutrition | null>(null);
-  const [quantity, setQuantity] = useState('100');
+  const [selectedFoods, setSelectedFoods] = useState<Array<{
+    nutrition: FoodNutrition;
+    quantity: number;
+    unit: string;
+  }>>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -35,7 +46,14 @@ export default function LogFoodScreen() {
     setLoading(true);
     try {
       const nutrition = await getFoodNutrition(searchQuery);
-      setSelectedFood(nutrition);
+      // Add to selected foods with default 100g quantity
+      const newFood = {
+        nutrition,
+        quantity: 100,
+        unit: 'g'
+      };
+      setSelectedFoods(prev => [...prev, newFood]);
+      setSearchQuery('');
     } catch (error) {
       Alert.alert('Error', 'Failed to get nutrition information. Please try again.');
     } finally {
@@ -43,22 +61,55 @@ export default function LogFoodScreen() {
     }
   };
 
+  const updateFoodQuantity = (index: number, quantity: number) => {
+    setSelectedFoods(prev => 
+      prev.map((food, i) => 
+        i === index ? { ...food, quantity } : food
+      )
+    );
+  };
+
+  const removeFoodItem = (index: number) => {
+    setSelectedFoods(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const calculateTotalNutrition = () => {
+    return selectedFoods.reduce((total, food) => {
+      const multiplier = food.quantity / 100;
+      return {
+        calories: total.calories + (food.nutrition.calories * multiplier),
+        protein: total.protein + (food.nutrition.protein * multiplier),
+        carbs: total.carbs + (food.nutrition.carbs * multiplier),
+        fat: total.fat + (food.nutrition.fat * multiplier),
+      };
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  };
+
   const handleLogFood = async () => {
-    if (!selectedFood) {
-      Alert.alert('Error', 'Please search for a food item first');
+    if (selectedFoods.length === 0) {
+      Alert.alert('Error', 'Please add at least one food item');
       return;
     }
 
-    const multiplier = parseFloat(quantity) / 100 || 1;
+    const totalNutrition = calculateTotalNutrition();
+    
     const entry: FoodEntry = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
       meal: selectedMeal,
-      food: selectedFood.name,
-      calories: Math.round(selectedFood.calories * multiplier),
-      protein: Math.round(selectedFood.protein * multiplier * 10) / 10,
-      carbs: Math.round(selectedFood.carbs * multiplier * 10) / 10,
-      fat: Math.round(selectedFood.fat * multiplier * 10) / 10,
+      foods: selectedFoods.map(food => ({
+        name: food.nutrition.name,
+        quantity: food.quantity,
+        unit: food.unit,
+        calories: Math.round(food.nutrition.calories * food.quantity / 100),
+        protein: Math.round(food.nutrition.protein * food.quantity / 100 * 10) / 10,
+        carbs: Math.round(food.nutrition.carbs * food.quantity / 100 * 10) / 10,
+        fat: Math.round(food.nutrition.fat * food.quantity / 100 * 10) / 10,
+      })),
+      calories: Math.round(totalNutrition.calories),
+      protein: Math.round(totalNutrition.protein * 10) / 10,
+      carbs: Math.round(totalNutrition.carbs * 10) / 10,
+      fat: Math.round(totalNutrition.fat * 10) / 10,
     };
 
     try {
@@ -156,66 +207,94 @@ export default function LogFoodScreen() {
           </View>
 
           {/* Selected Food */}
-          {selectedFood && (
+          {selectedFoods.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Nutrition Information</Text>
-              <View style={styles.selectedFoodCard}>
-                <View style={styles.selectedFoodHeader}>
-                  <Text style={styles.selectedFoodName}>{selectedFood.name}</Text>
-                  <TouchableOpacity onPress={() => setSelectedFood(null)}>
-                    <Feather name="x" size={18} color="rgba(255, 255, 255, 0.7)" />
-                  </TouchableOpacity>
+              <Text style={styles.sectionTitle}>Selected Foods ({selectedFoods.length})</Text>
+              
+              {selectedFoods.map((food, index) => (
+                <View key={index} style={styles.selectedFoodCard}>
+                  <View style={styles.selectedFoodHeader}>
+                    <Text style={styles.selectedFoodName}>{food.nutrition.name}</Text>
+                    <TouchableOpacity onPress={() => removeFoodItem(index)}>
+                      <Feather name="x" size={18} color="rgba(255, 255, 255, 0.7)" />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={styles.quantityContainer}>
+                    <Text style={styles.quantityLabel}>Quantity (grams)</Text>
+                    <TextInput
+                      style={styles.quantityInput}
+                      value={food.quantity.toString()}
+                      onChangeText={(text) => updateFoodQuantity(index, parseFloat(text) || 0)}
+                      keyboardType="decimal-pad"
+                      placeholder="100"
+                      placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                    />
+                  </View>
+                  
+                  <View style={styles.nutritionGrid}>
+                    <View style={styles.nutritionItem}>
+                      <Text style={styles.nutritionValue}>
+                        {Math.round(food.nutrition.calories * food.quantity / 100)}
+                      </Text>
+                      <Text style={styles.nutritionLabel}>Calories</Text>
+                    </View>
+                    <View style={styles.nutritionItem}>
+                      <Text style={styles.nutritionValue}>
+                        {Math.round(food.nutrition.protein * food.quantity / 100 * 10) / 10}g
+                      </Text>
+                      <Text style={styles.nutritionLabel}>Protein</Text>
+                    </View>
+                    <View style={styles.nutritionItem}>
+                      <Text style={styles.nutritionValue}>
+                        {Math.round(food.nutrition.carbs * food.quantity / 100 * 10) / 10}g
+                      </Text>
+                      <Text style={styles.nutritionLabel}>Carbs</Text>
+                    </View>
+                    <View style={styles.nutritionItem}>
+                      <Text style={styles.nutritionValue}>
+                        {Math.round(food.nutrition.fat * food.quantity / 100 * 10) / 10}g
+                      </Text>
+                      <Text style={styles.nutritionLabel}>Fat</Text>
+                    </View>
+                  </View>
                 </View>
-                
-                <Text style={styles.servingSize}>Per {quantity}g serving</Text>
-                
-                <View style={styles.nutritionGrid}>
-                  <View style={styles.nutritionItem}>
-                    <Text style={styles.nutritionValue}>
-                      {Math.round(selectedFood.calories * parseFloat(quantity) / 100)}
-                    </Text>
-                    <Text style={styles.nutritionLabel}>Calories</Text>
+              ))}
+              
+              {(() => {
+                const total = calculateTotalNutrition();
+                return (
+                  <View style={styles.totalNutritionCard}>
+                    <Text style={styles.totalTitle}>Total for {selectedMeal}</Text>
+                    <View style={styles.nutritionGrid}>
+                      <View style={styles.nutritionItem}>
+                        <Text style={styles.nutritionValue}>{Math.round(total.calories)}</Text>
+                        <Text style={styles.nutritionLabel}>Calories</Text>
+                      </View>
+                      <View style={styles.nutritionItem}>
+                        <Text style={styles.nutritionValue}>{Math.round(total.protein * 10) / 10}g</Text>
+                        <Text style={styles.nutritionLabel}>Protein</Text>
+                      </View>
+                      <View style={styles.nutritionItem}>
+                        <Text style={styles.nutritionValue}>{Math.round(total.carbs * 10) / 10}g</Text>
+                        <Text style={styles.nutritionLabel}>Carbs</Text>
+                      </View>
+                      <View style={styles.nutritionItem}>
+                        <Text style={styles.nutritionValue}>{Math.round(total.fat * 10) / 10}g</Text>
+                        <Text style={styles.nutritionLabel}>Fat</Text>
+                      </View>
+                    </View>
                   </View>
-                  <View style={styles.nutritionItem}>
-                    <Text style={styles.nutritionValue}>
-                      {Math.round(selectedFood.protein * parseFloat(quantity) / 100 * 10) / 10}g
-                    </Text>
-                    <Text style={styles.nutritionLabel}>Protein</Text>
-                  </View>
-                  <View style={styles.nutritionItem}>
-                    <Text style={styles.nutritionValue}>
-                      {Math.round(selectedFood.carbs * parseFloat(quantity) / 100 * 10) / 10}g
-                    </Text>
-                    <Text style={styles.nutritionLabel}>Carbs</Text>
-                  </View>
-                  <View style={styles.nutritionItem}>
-                    <Text style={styles.nutritionValue}>
-                      {Math.round(selectedFood.fat * parseFloat(quantity) / 100 * 10) / 10}g
-                    </Text>
-                    <Text style={styles.nutritionLabel}>Fat</Text>
-                  </View>
-                </View>
-
-                <View style={styles.quantityContainer}>
-                  <Text style={styles.quantityLabel}>Quantity (grams)</Text>
-                  <TextInput
-                    style={styles.quantityInput}
-                    value={quantity}
-                    onChangeText={setQuantity}
-                    keyboardType="decimal-pad"
-                    placeholder="100"
-                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                  />
-                </View>
-              </View>
+                );
+              })()}
             </View>
           )}
 
-          {!selectedFood && !loading && (
+          {selectedFoods.length === 0 && !loading && (
             <View style={styles.emptyState}>
               <Feather name="search" size={48} color="rgba(255, 255, 255, 0.3)" />
-              <Text style={styles.emptyText}>Search for any food item</Text>
-              <Text style={styles.emptySubtext}>Get instant nutrition information powered by AI</Text>
+              <Text style={styles.emptyText}>Search and add food items</Text>
+              <Text style={styles.emptySubtext}>Add multiple foods to build your meal</Text>
             </View>
           )}
         </ScrollView>
@@ -330,6 +409,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
+    marginBottom: 12,
   },
   selectedFoodHeader: {
     flexDirection: 'row',
@@ -343,10 +423,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     flex: 1,
   },
-  servingSize: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
-    marginBottom: 16,
+  totalNutritionCard: {
+    backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
+  },
+  totalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4ADE80',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   nutritionGrid: {
     flexDirection: 'row',
