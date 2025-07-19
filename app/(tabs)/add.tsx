@@ -19,6 +19,7 @@ export default function AddScreen() {
   return (
     <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.innerContainer}>
         <View style={styles.header}>
           <Text style={styles.title}>Quick Add</Text>
         </View>
@@ -40,6 +41,7 @@ export default function AddScreen() {
           <Text style={styles.actionSubtitle}>Log your exercise session</Text>
           <Feather name="chevron-right" size={20} color="#C6C6C8" />
         </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -51,6 +53,11 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    marginHorizontal: 0,
   },
   header: {
     paddingHorizontal: 20,

@@ -169,6 +169,7 @@ export default function HomeScreen() {
   return (
     <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.innerContainer}>
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Good morning</Text>
@@ -306,6 +307,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -317,6 +319,11 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    marginHorizontal: 0,
   },
   loadingContainer: {
     flex: 1,

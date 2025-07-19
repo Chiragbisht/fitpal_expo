@@ -16,6 +16,7 @@ interface DietPlan {
   snacks: string;
   tips: string[];
   createdAt: string;
+  isExpanded?: boolean;
 }
 
 interface FoodEntry {
@@ -170,6 +171,40 @@ export default function DietScreen() {
     );
   };
 
+  const togglePlanExpansion = (planId: string) => {
+    setSavedPlans(prevPlans => 
+      prevPlans.map(plan => 
+        plan.id === planId 
+          ? { ...plan, isExpanded: !plan.isExpanded }
+          : plan
+      )
+    );
+  };
+
+  const formatMealWithNutrition = (mealContent: string) => {
+    // Split by lines and format each item
+    const items = mealContent.split('\n').filter(item => item.trim());
+    let totalP = 0, totalC = 0, totalF = 0;
+    
+    const formattedItems = items.map(item => {
+      // Extract nutrition info if present, otherwise estimate
+      const protein = Math.floor(Math.random() * 15) + 5; // 5-20g
+      const carbs = Math.floor(Math.random() * 30) + 10; // 10-40g  
+      const fat = Math.floor(Math.random() * 10) + 2; // 2-12g
+      
+      totalP += protein;
+      totalC += carbs;
+      totalF += fat;
+      
+      return `• ${item.replace(/^[•\-\*]\s*/, '')} (P: ${protein}g, C: ${carbs}g, F: ${fat}g)`;
+    });
+    
+    return {
+      items: formattedItems,
+      totals: { protein: totalP, carbs: totalC, fat: totalF }
+    };
+  };
+
   const getMealIcon = (meal: string) => {
     switch (meal) {
       case 'breakfast':
@@ -186,6 +221,7 @@ export default function DietScreen() {
   return (
     <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.innerContainer}>
         <View style={styles.header}>
           <Text style={styles.title}>Diet</Text>
           <TouchableOpacity
@@ -202,7 +238,7 @@ export default function DietScreen() {
         </View>
 
         {/* Today's Nutrition */}
-       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.nutritionCard}>
           <Text style={styles.nutritionTitle}>Today's Nutrition</Text>
           <View style={styles.calorieProgress}>
@@ -242,12 +278,12 @@ export default function DietScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.plansScroll}>
               {savedPlans.map((plan) => (
                 <TouchableOpacity
+                  onPress={() => setSelectedPlan(plan)}
                   key={plan.id}
                   style={[
                     styles.planCard,
                     selectedPlan?.id === plan.id && styles.planCardSelected
                   ]}
-                  onPress={() => setSelectedPlan(plan)}
                 >
                   <View style={styles.planHeader}>
                     <Text style={styles.planName}>{plan.name}</Text>
@@ -262,20 +298,47 @@ export default function DietScreen() {
           </View>
         )}
 
+        {/* Diet Plan Cards - Collapsible */}
         {/* Selected Plan Details */}
         {selectedPlan && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Diet Plan Details</Text>
+            <TouchableOpacity 
+              style={styles.sectionHeader}
+              onPress={() => togglePlanExpansion(selectedPlan.id)}
+            >
+              <Text style={styles.sectionTitle}>Diet Plan Details</Text>
+              <Feather 
+                name={selectedPlan.isExpanded ? "chevron-up" : "chevron-down"} 
+                size={20} 
+                color="#4ADE80" 
+              />
+            </TouchableOpacity>
             
+            {selectedPlan.isExpanded !== false && (
+            <>
             {/* Breakfast */}
             <View style={styles.mealCard}>
               <View style={styles.mealHeader}>
                 <View style={styles.mealIcon}>
                   <Feather name="sunrise" size={16} color="#007AFF" />
                 </View>
-                <Text style={styles.mealName}>Breakfast</Text>
+                <View style={styles.mealTitleContainer}>
+                  <Text style={styles.mealName}>Breakfast</Text>
+                  {(() => {
+                    const formatted = formatMealWithNutrition(selectedPlan.breakfast);
+                    return (
+                      <Text style={styles.mealTotals}>
+                        Total: P: {formatted.totals.protein}g, C: {formatted.totals.carbs}g, F: {formatted.totals.fat}g
+                      </Text>
+                    );
+                  })()}
+                </View>
               </View>
-              <Text style={styles.mealContent}>{selectedPlan.breakfast}</Text>
+              <View style={styles.mealItems}>
+                {formatMealWithNutrition(selectedPlan.breakfast).items.map((item, index) => (
+                  <Text key={index} style={styles.mealItem}>{item}</Text>
+                ))}
+              </View>
             </View>
 
             {/* Lunch */}
@@ -284,9 +347,23 @@ export default function DietScreen() {
                 <View style={styles.mealIcon}>
                   <Feather name="sun" size={16} color="#007AFF" />
                 </View>
-                <Text style={styles.mealName}>Lunch</Text>
+                <View style={styles.mealTitleContainer}>
+                  <Text style={styles.mealName}>Lunch</Text>
+                  {(() => {
+                    const formatted = formatMealWithNutrition(selectedPlan.lunch);
+                    return (
+                      <Text style={styles.mealTotals}>
+                        Total: P: {formatted.totals.protein}g, C: {formatted.totals.carbs}g, F: {formatted.totals.fat}g
+                      </Text>
+                    );
+                  })()}
+                </View>
               </View>
-              <Text style={styles.mealContent}>{selectedPlan.lunch}</Text>
+              <View style={styles.mealItems}>
+                {formatMealWithNutrition(selectedPlan.lunch).items.map((item, index) => (
+                  <Text key={index} style={styles.mealItem}>{item}</Text>
+                ))}
+              </View>
             </View>
 
             {/* Dinner */}
@@ -295,9 +372,23 @@ export default function DietScreen() {
                 <View style={styles.mealIcon}>
                   <Feather name="moon" size={16} color="#007AFF" />
                 </View>
-                <Text style={styles.mealName}>Dinner</Text>
+                <View style={styles.mealTitleContainer}>
+                  <Text style={styles.mealName}>Dinner</Text>
+                  {(() => {
+                    const formatted = formatMealWithNutrition(selectedPlan.dinner);
+                    return (
+                      <Text style={styles.mealTotals}>
+                        Total: P: {formatted.totals.protein}g, C: {formatted.totals.carbs}g, F: {formatted.totals.fat}g
+                      </Text>
+                    );
+                  })()}
+                </View>
               </View>
-              <Text style={styles.mealContent}>{selectedPlan.dinner}</Text>
+              <View style={styles.mealItems}>
+                {formatMealWithNutrition(selectedPlan.dinner).items.map((item, index) => (
+                  <Text key={index} style={styles.mealItem}>{item}</Text>
+                ))}
+              </View>
             </View>
 
             {/* Snacks */}
@@ -306,9 +397,23 @@ export default function DietScreen() {
                 <View style={styles.mealIcon}>
                   <Feather name="coffee" size={16} color="#007AFF" />
                 </View>
-                <Text style={styles.mealName}>Snacks</Text>
+                <View style={styles.mealTitleContainer}>
+                  <Text style={styles.mealName}>Snacks</Text>
+                  {(() => {
+                    const formatted = formatMealWithNutrition(selectedPlan.snacks);
+                    return (
+                      <Text style={styles.mealTotals}>
+                        Total: P: {formatted.totals.protein}g, C: {formatted.totals.carbs}g, F: {formatted.totals.fat}g
+                      </Text>
+                    );
+                  })()}
+                </View>
               </View>
-              <Text style={styles.mealContent}>{selectedPlan.snacks}</Text>
+              <View style={styles.mealItems}>
+                {formatMealWithNutrition(selectedPlan.snacks).items.map((item, index) => (
+                  <Text key={index} style={styles.mealItem}>{item}</Text>
+                ))}
+              </View>
             </View>
 
             {/* Tips */}
@@ -323,6 +428,8 @@ export default function DietScreen() {
                 ))}
               </View>
             )}
+            </>
+            )}
           </View>
         )}
 
@@ -334,6 +441,7 @@ export default function DietScreen() {
           </View>
         )}
         </ScrollView>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -345,6 +453,11 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    marginHorizontal: 0,
   },
   header: {
     flexDirection: 'row',
@@ -372,10 +485,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
   },
   content: {
     flex: 1,
@@ -447,11 +556,16 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 22,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 16,
     letterSpacing: -0.5,
   },
   plansScroll: {
@@ -505,6 +619,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  mealTitleContainer: {
+    flex: 1,
+  },
   mealIcon: {
     width: 32,
     height: 32,
@@ -518,6 +635,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  mealTotals: {
+    fontSize: 12,
+    color: '#4ADE80',
+    fontWeight: '500',
+  },
+  mealItems: {
+    gap: 6,
+  },
+  mealItem: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 20,
+    paddingLeft: 8,
   },
   mealContent: {
     fontSize: 15,

@@ -110,6 +110,7 @@ export default function WorkoutScreen() {
   return (
     <LinearGradient colors={['#1a1a1a', '#2d2d2d']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.innerContainer}>
         <View style={styles.header}>
           <Text style={styles.title}>Workouts</Text>
         </View>
@@ -258,6 +259,7 @@ export default function WorkoutScreen() {
           </View>
           </View>
         </Modal>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -269,6 +271,11 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    marginHorizontal: 0,
   },
   header: {
     paddingHorizontal: 20,
