@@ -114,7 +114,7 @@ export default function WorkoutScreen() {
           <Text style={styles.title}>Workouts</Text>
         </View>
 
-        <ScrollView style={styles.content}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categories</Text>
           <View style={styles.categoriesGrid}>
