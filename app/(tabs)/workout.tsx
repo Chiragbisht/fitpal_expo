@@ -158,10 +158,10 @@ export default function WorkoutScreen() {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.workoutDetails}>
-                  {entry.sets && <Text style={styles.workoutDetail}>Sets: {entry.sets}</Text>}
-                  {entry.reps && <Text style={styles.workoutDetail}>Reps: {entry.reps}</Text>}
-                  {entry.weight && <Text style={styles.workoutDetail}>Weight: {entry.weight}kg</Text>}
-                  {entry.notes && <Text style={styles.workoutNotes}>{entry.notes}</Text>}
+                  {entry.sets ? <Text style={styles.workoutDetail}>Sets: {entry.sets}</Text> : null}
+                  {entry.reps ? <Text style={styles.workoutDetail}>Reps: {entry.reps}</Text> : null}
+                  {entry.weight ? <Text style={styles.workoutDetail}>Weight: {entry.weight}kg</Text> : null}
+                  {entry.notes ? <Text style={styles.workoutNotes}>{entry.notes}</Text> : null}
                 </View>
               </View>
             ))
