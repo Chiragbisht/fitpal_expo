@@ -183,7 +183,7 @@ export default function DietScreen() {
 
   const formatMealWithNutrition = (mealContent: string) => {
     // Split by lines and format each item
-    const items = mealContent.split('\n').filter(item => item.trim());
+    const items = String(mealContent || '').split('\n').filter(item => item.trim());
     let totalP = 0, totalC = 0, totalF = 0;
     
     const formattedItems = items.map(item => {
